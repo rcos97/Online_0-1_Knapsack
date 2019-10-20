@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>0/1背包问题</title>
+    <style>
+      * {
+        margin: 0px;
+        padding: 0px;
+      }
+      #app {
+        overflow-y:auto;
+        display: flex;
+        flex-direction: column;
+        background-image: url(./timg.jpg);
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -10;
+        zoom: 1;
+        background-color: #fff;
+        background-repeat: no-repeat;
+        background-size: cover;
+        -webkit-background-size: cover;
+        -o-background-size: cover;
+        background-position: center 0;
+      }
+      .header {
+        height: 50px;
+        padding: 50px;
+      }
+      .header > h1 {
+        text-align: center;
+      }
+      .input-box {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      /* 输入界面的盒子 */
+      .main-div {
+        width: 30%;
+        background-color: #fff;
+        border-radius: 4px;
+        border: blue solid 3px;
+        box-shadow: 0 2px 2px rgba(10, 16, 20, 0.24),
+          0 0 2px rgba(10, 16, 20, 0.12);
+        box-sizing: border-box;
+        transition: box-shadow 0.5s;
+        min-width: 262px;
+        margin: 24px 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .show {
+        width: 90%;
+        margin: 0 auto;
+        border: none;
+        box-shadow: none;
+        overflow-x: auto;
+      }
+      .main-div > p {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .main-div > input {
+        max-width: 300px;
+        min-width: 100px;
+      }
+      .main-div > button {
+        display: block;
+        margin: 0 auto;
+        color: white;
+        background: #10bbf1;
+        border: 2px solid #10bbf1;
+        font: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        padding: 0 21px;
+        transition: color 0.1s linear, background-color 0.1s linear,
+          border-color 0.1s linear;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        margin-top: 10px;
+      }
+      /* 展示的表格 */
+      table.gridtable {
+        width: 100%;
+        font-family: verdana, arial, sans-serif;
+        font-size: 11px;
+        color: #333333;
+        border-width: 1px;
+        border-color: #666666;
+        border-collapse: collapse;
+      }
+      table.gridtable th {
+        border-width: 1px;
+        padding: 8px;
+        border-style: solid;
+        border-color: #666666;
+        background-color: #dedede;
+      }
+      table.gridtable td {
+        border-width: 1px;
+        padding: 8px;
+        border-style: solid;
+        border-color: #666666;
+        background-color: #ffffff;
+      }
+
+      .delete-button {
+        color: white;
+        background: #e40d0d;
+        border: 2px solid #e40d0d;
+        font: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        padding: 0 21px;
+        transition: color 0.1s linear, background-color 0.1s linear,
+          border-color 0.1s linear;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="header"><h1>在线背包问题计算器</h1></div>
+      <div>
+        <div class="main-div show">
+          <p>背包内容</p>
+          <table class="gridtable">
+            <tr>
+              <th>背包空间==></th>
+              <th v-for="i in parseInt(size)+1">{{ i - 1 }}</th>
+            </tr>
+            <tr>
+              <td>无物品</td>
+              <td v-for="i in parseInt(size)+1">0</td>
+            </tr>
+            <tr v-for="i in list.length">
+              <td>
+                <button
+                  type="submit"
+                  class="delete-button"
+                  @click.prevent="deleteItem(i-1)"
+                >
+                  删除
+                </button>
+                重量={{ list[i - 1].weight }} 价值={{ list[i - 1].value }}
+              </td>
+              <td v-for="j in dp[i]">{{ j }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <!-- 输入部分 -->
+        <div class="input-box">
+          <div class="main-div">
+            <p>背包总空间</p>
+            <input type="number" v-model="size" />
+          </div>
+          <div class="main-div">
+            <p>物品价值与重量</p>
+            <div>重量：<input type="number" v-model="weight" /></div>
+            <div>价值：<input type="number" v-model="value" /></div>
+            <button type="submit" @click.prevent="addItem">增加</button>
+          </div>
+          <div class="main-div">
+            <p>清空所有内容</p>
+            <button type="submit" @click.prevent="deleteAll">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script src="vue.js"></script>
+  <script>
+    let vm = new Vue({
+      el: "#app",
+      data: {
+        list: [],
+        id: 0,
+        size: 20,
+        weight: null,
+        value: null,
+        dp: []
+      },
+      methods: {
+        //删除全面元素
+        deleteAll: function() {
+          this.list = [];
+          this.id = 0;
+        },
+        //删除一个元素
+        deleteItem: function(i) {
+          this.list.splice(i, 1);
+        },
+        // 增加元素
+        addItem: function() {
+          //赋值部分
+          if (this.$options.methods.check(this) == "") {
+            let tempObj = {
+              id: this.id++,
+              weight: this.weight,
+              value: this.value
+            };
+            this.list.push(tempObj);
+            this.weight = null;
+            this.value = null;
+            this.$options.methods.calculateDp(this);
+          } else {
+            alert(this.$options.methods.check(this));
+          }
+        },
+
+        // 动态规划
+        calculateDp: function(self) {
+          weightList = [];
+          weightList[0] = 0;
+          valueList = [];
+          valueList[0] = 0;
+          for (let i = 1; i <= self.list.length; i++) {
+            weightList[i] = parseInt(self.list[i - 1].weight);
+            valueList[i] = parseInt(self.list[i - 1].value);
+          }
+          self.dp[0] = [];
+          for (let i = 0; i <= self.size; i++) {
+            self.dp[0][i] = 0;
+          }
+          for (let i = 1; i <= self.list.length; i++) {
+            self.dp[i] = [];
+            self.dp[i][0] = 0;
+          }
+          for (let i = 1; i <= self.list.length; i++) {
+            for (let j = 1; j <= self.size; j++) {
+              if (weightList[i] > j) {
+                self.dp[i][j] = self.dp[i - 1][j];
+              } else {
+                let value1 = self.dp[i - 1][j - weightList[i]] + valueList[i];
+                let value2 = self.dp[i - 1][j];
+                if (value1 > value2) {
+                  self.dp[i][j] = value1;
+                } else {
+                  self.dp[i][j] = value2;
+                }
+              }
+            }
+          }
+        },
+
+        //输入验证
+        check: function(self) {
+          let str = "";
+          if (self.size <= 0 || self.size == null) {
+            str = "背包空间不能为负数或零或空";
+          }
+          if (self.weight < 0 || self.weight == null) {
+            str += "\n";
+            str += "重量不能为负值或空";
+          }
+          if (self.value < 0 || self.value == null) {
+            str += "\n";
+            str += "价值不能负值或空";
+          }
+          return str;
+        }
+      },
+      watch: {
+        size: function() {
+          if (!(this.size <= 0 || this.size == null)) {
+            this.$options.methods.calculateDp(this);
+          }
+        }
+      }
+    });
+  </script>
+</html>
